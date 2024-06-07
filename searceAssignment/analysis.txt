@@ -1,0 +1,8 @@
+I expected the greedy algorithm to perform better since the map isn’t too blocked at the walls and 
+most had straight paths except for one from each corner to each corner. 
+For A* Step vs A* Turn, I expected using the cost function stepTurn would yield better results as it would ensure the algorithm minimised turns, 
+which would help since the map had those straight lines to each corner for the most part.
+
+When tested the results lined up with my expectations. 
+Greedy corners drew mostly straight lines to each corner except for the right wall. 
+A* StepCount had more turns in its path while changing the cost function to step turn eliminated nodes as options since its cost was too high.
