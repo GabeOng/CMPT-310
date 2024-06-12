@@ -60,17 +60,35 @@ def minmax_cutoff(game, state):
     player = game.to_move(state)
 
     def max_value(state, d):
-        print("Your code goes here -3pt")
-
-        return 0
+        
+        print("Your code goes here a -3pt")
+        if game.terminal_test(state) or d<=0:
+            return game.utility(state, player)
+        v = -np.inf
+        print(d)
+        
+        for a in game.actions(state):
+            
+            v = max(v, min_value(game.result(state, a), d-1))
+               
+       
+        return v
+        
 
     def min_value(state, d):
-        print("Your code goes here -2pt")
+        
+        if game.terminal_test(state) or d<=0:
+            return game.utility(state, player)
+        v = np.inf
+        print(d)
+        
+        for a in game.actions(state):
 
-        return 0
+            v = min(v, max_value(game.result(state, a), d-1))
+        return v
 
     # Body of minmax_cutoff:
-    return max(game.actions(state), key=lambda a: min_value(game.result(state, a), 0), default=None)
+    return max(game.actions(state), key=lambda a: min_value(game.result(state, a), game.d), default=None)
 
 # ______________________________________________________________________________
 
@@ -85,22 +103,33 @@ def alpha_beta(game, state):
         if game.terminal_test(state):
             return game.utility(state, player)
         print("Your code goes here -3pt")
-
-        return 0
+        v=-np.inf
+        for a in game.actions(state):
+            v=max(v, min_value(game.result(state, a), alpha, beta))
+            if v>=beta:
+                return v
+            a=max(a, v)
+        return v
 
     def min_value(state, alpha, beta):
         if game.terminal_test(state):
             return game.utility(state, player)
         print("Your code goes here -2pt")
-
-        return 0
+        v=np.inf
+        for a in game.actions(state):
+            v=min(v, max_value(game.result(state, a), alpha, beta))
+            if v<= a:
+                return v
+            beta=min(beta, v)
+        return v
 
     # Body of alpha_beta_search:
     alpha = -np.inf
     beta = np.inf
     best_action = None
     print("Your code goes here -10pt")
-
+    v=max_value(state, alpha, beta)
+    # TODO: return value????
     return best_action
 
 
@@ -168,13 +197,13 @@ def alpha_beta_player(game, state):
     if( game.timer < 0):
         game.d = -1
         return alpha_beta(game, state)
-
+    
     start = time.perf_counter()
     end = start + game.timer
     """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
     move = None
     print("Your code goes here -10pt")
-
+    
     print("iterative deepening to depth: ", game.d)
     return move
 
@@ -192,9 +221,9 @@ def minmax_player(game, state):
     start = time.perf_counter()
     end = start + game.timer
     """use the above timer to implement iterative deepening using minmax_cutoff() version"""
-    move = None
+    move = minmax_cutoff(game, state)
     print("Your code goes here -10pt")
-
+    game.d=game.timer
     print("iterative deepening to depth: ", game.d)
     return move
 
@@ -343,8 +372,8 @@ class TicTacToe(Game):
             return match
 
         # Maybe to accelerate, return 0 if number of pieces on board is less than half of board size:
-        #if len(state.moves) <= self.k / 2:
-        #    return 0
+        if len(state.moves) <= self.k / 2:
+            return 0
 
         print("Your code goes here 15pt.")
 
