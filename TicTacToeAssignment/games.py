@@ -58,32 +58,41 @@ def minmax_cutoff(game, state):
     forward all the way to the cutoff depth. At that level use evaluation func."""
 
     player = game.to_move(state)
-
+    
+    
     def max_value(state, d):
         
         print("Your code goes here a -3pt")
-        if game.terminal_test(state) or d<=0:
-            return game.eval1(state)
+        if game.terminal_test(state):
+            return 20000
+        if d<=0:
+            s=game.eval1(state)
+            print('score', s)
+            return s
+        
         v = -np.inf
-        print(d)
+        
         
         for a in game.actions(state):
             v = max(v, min_value(game.result(state, a), d-1))
         return v
 
     def min_value(state, d):
-        
-        if game.terminal_test(state) or d<=0:
-            return game.eval1(state)
-        v = np.inf
-        print(d)
-        
+        if game.terminal_test(state):
+            return -20000
+        if d<=0:
+            s=game.eval1(state)
+            print('score',s)
+            return s
+        v = np.inf        
         for a in game.actions(state):
-
-            v = min(v, max_value(game.result(state, a), d-1))
+            v = min(v, -max_value(game.result(state, a), d-1))
         return v
 
     # Body of minmax_cutoff:
+    #if( player ==0 or game.terminal_test(state)):
+    #   return game.eval1(state)
+    
     return max(game.actions(state), key=lambda a: min_value(game.result(state, a), game.d), default=None)
 
 # ______________________________________________________________________________
@@ -135,31 +144,34 @@ def alpha_beta_cutoff(game, state):
     player = game.to_move(state)
 
     # Functions used by alpha_beta
+    #TODO:check if winning move first then check depth holy fuck im dumb
+    #should be fine after that?
     def max_value(state, alpha, beta, depth):
-        if game.terminal_test(state) or depth<=0:
-            print('depth found')
-            return game.utility(state, player)
+        if depth<=0:
+            print('depth found', depth)
+            return game.eval1(state)
         #print("Your code goes here -3pt")
         
         v=-np.inf
         for a in game.actions(state):
             v=max(v, min_value(game.result(state, a), alpha, beta, depth-1))
-            if v>=beta:
+            if v>=alpha:
                 return v
-            beta=max(beta, v)
+            alpha=max(alpha, v)
         return v
 
     def min_value(state, alpha, beta, depth):
-        if game.terminal_test(state) or depth<=0:
-            return game.utility(state, player)
+        if depth<=0:
+            print('depth found', depth)
+            return game.eval1(state)
         #print("Your code goes here -3pt")
         depth-=1
         v=np.inf
         for a in game.actions(state):
-            v=max(v, max_value(game.result(state, a), alpha, beta, depth-1))
-            if v>=alpha:
+            v=min(v, -max_value(game.result(state, a), alpha, beta, depth-1))
+            if v<=beta:
                 return v
-            alpha=max(alpha, v)
+            beta=min(beta, v)
         return v
 
     # Body of alpha_beta_cutoff_search starts here:
@@ -167,7 +179,7 @@ def alpha_beta_cutoff(game, state):
     alpha = -np.inf
     beta = np.inf
     best_action = None
-    print("Your code goes here -10pt")
+    #print("Your code goes here -10pt")
     print('depth', game.d)
     return max(game.actions(state), key=lambda a: min_value(game.result(state, a), alpha, beta, game.d), default=None)
 
@@ -217,7 +229,7 @@ def alpha_beta_player(game, state):
     """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
     move = None
     #might not work? idk
-    print("Your code goes here -10pt")
+    #print("Your code goes here -10pt")
     print('game.d')
     #while time.perf_counter()<end:
     move=alpha_beta_cutoff(game,state)
@@ -320,7 +332,7 @@ class TicTacToe(Game):
             self.k = size
         else:
             self.k = k
-        self.d = -1 # d is cutoff depth. Default is -1 meaning no depth limit. It is controlled usually by timer
+        self.d = 2 # d is cutoff depth. Default is -1 meaning no depth limit. It is controlled usually by timer
         self.maxDepth = size * size # max depth possible is width X height of the board
         self.timer = t #timer  in seconds for opponent's search time limit. -1 means unlimited
         moves = [(x, y) for x in range(1, size + 1)
@@ -383,77 +395,60 @@ class TicTacToe(Game):
         
     # evaluation function, version 1
     def eval1(self, state):
-        """Evaluate the board state for the current player."""
+        """design and implement evaluation function for state.
+        Some ideas: 1-use the number of k-1 matches for X and O For this you can use function possibleKComplete().
+            : 2- expand it for all k matches
+            : 3- include double matches where one move can generate 2 matches.
+            """
         
-        def possiblekComplete(board, player, k):
-            """Computes the number of k-1 matches for a given player on the board."""
-            match = 0
-            for move in state.moves:
-                match += self.k_in_row(board, move, player, (0, 1), k-1)
-                match += self.k_in_row(board, move, player, (1, 0), k-1)
-                match += self.k_in_row(board, move, player, (1, -1), k-1)
-                match += self.k_in_row(board, move, player, (1, 1), k-1)
+        """ computes number of (k-1) completed matches. This means number of row or columns or diagonals 
+        which include player position and in which k-1 spots are occuppied by player.
+        """
+        player= state.to_move
+        
+        def possiblekComplete(move, board, player, k):
+            """if move can complete a line of count items, return 1 for 'X' player and -1 for 'O' player"""
+            match = self.k_in_row(board, move, player, (0, 1), k)
+            match = match + self.k_in_row(board, move, player, (1, 0), k)
+            match = match + self.k_in_row(board, move, player, (1, -1), k)
+            match = match + self.k_in_row(board, move, player, (1, 1), k)
             return match
 
-        def doubleMatchPotential(board, player, k):
-            """Identify positions where a single move can complete two lines."""
-            double_match = 0
-            for move in state.moves:
-                # Check if move can complete multiple lines
-                directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
-                for dir1 in directions:
-                    for dir2 in directions:
-                        if dir1 != dir2:
-                            if self.k_in_row(board, move, player, dir1, k-1) and self.k_in_row(board, move, player, dir2, k-1):
-                                double_match += 1
-            return double_match
-
-        def completeMatches(board, player, k):
-            """Counts the number of k matches (completed lines) for the player."""
-            complete = 0
-            for move in state.moves:
-                complete += self.k_in_row(board, move, player, (0, 1), k)
-                complete += self.k_in_row(board, move, player, (1, 0), k)
-                complete += self.k_in_row(board, move, player, (1, -1), k)
-                complete += self.k_in_row(board, move, player, (1, 1), k)
-            return complete
-
-        def blockOpponentWin(board, opponent, k):
-            """Identify and score imminent winning threats from the opponent."""
-            block_score = 0
-            for move in state.moves:
-                if self.k_in_row(board, move, opponent, (0, 1), k-1) or \
-                self.k_in_row(board, move, opponent, (1, 0), k-1) or \
-                self.k_in_row(board, move, opponent, (1, -1), k-1) or \
-                self.k_in_row(board, move, opponent, (1, 1), k-1):
-                    block_score -= 1000000  # High penalty to prioritize blocking
-            return block_score
-
+        
+        
+        # Maybe to accelerate, return 0 if number of pieces on board is less than half of board size:
         if len(state.moves) <= self.k / 2:
             return 0
 
-        player = state.to_move
-        opponent = 'X' if player == 'O' else 'O'
-        
-        # Calculate evaluation scores
-        player_k_minus_1 = possiblekComplete(state.board, player, self.k)
-        opponent_k_minus_1 = possiblekComplete(state.board, opponent, self.k)
-        
-        player_double_matches = doubleMatchPotential(state.board, player, self.k)
-        opponent_double_matches = doubleMatchPotential(state.board, opponent, self.k)
-        
-        player_complete_matches = completeMatches(state.board, player, self.k)
-        opponent_complete_matches = completeMatches(state.board, opponent, self.k)
-        
-        block_opponent_score = blockOpponentWin(state.board, opponent, self.k)
-
-        # Calculate the overall evaluation score
-        score = (player_complete_matches * 1000 - opponent_complete_matches * 1000 +
-                player_k_minus_1 * 10 - opponent_k_minus_1 * 10 +
-                player_double_matches * 5 - opponent_double_matches * 5 +
-                block_opponent_score)
-        
+        print("Your code goes here 15pt.")
+        score =0
+        for move in state.moves:
+            #check for wins
+            if (possiblekComplete(move, state.board, player, self.k)!=0):
+                score+=1000
+            #check for k-1 in a row for player
+            if(possiblekComplete(move, state.board, player, self.k-1)==1):
+                score+=100
+            elif(possiblekComplete(move, state.board, player, self.k-1)==-1):
+                score+=100
+            #check for k-2 in a row for 4 and 5
+            if(self.k>=4 and possiblekComplete(move, state.board, player, self.k-2)==1):
+                score+=10
+            elif(possiblekComplete(move, state.board, player, self.k-2)==-1):
+                score+=10
+            #center moves are good
+            x, y = move
+            if(x==self.k/2+1 and y == self.k/2+1 ):
+                score+=1
+        def display(state):
+            board = state.board
+            for x in range(0, self.k):
+                for y in range(1, self.k + 1):
+                    print(board.get((self.k - x, y), '.'), end=' ')
+                print()
+        display(state)
         return score
+
 
 
 
