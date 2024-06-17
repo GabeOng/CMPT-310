@@ -61,30 +61,21 @@ def minmax_cutoff(game, state):
     
     
     def max_value(state, d):
-        
-        print("Your code goes here a -3pt")
         if game.terminal_test(state):
-            return 20000
+            return game.utility(state, player)
         if d<=0:
-            s=game.eval1(state)
-            
-            return s
-        
+            return game.eval1(state)
         v = -np.inf
-        
-        
         for a in game.actions(state):
             v = max(v, min_value(game.result(state, a), d-1))
         return v
 
     def min_value(state, d):
         if game.terminal_test(state):
-            return -20000
+            return game.utility(state, player)
         if d<=0:
-            s=game.eval1(state)
-           
-            return s
-        v = np.inf        
+            return game.eval1(state)
+        v = np.inf
         for a in game.actions(state):
             v = min(v, max_value(game.result(state, a), d-1))
         return v
@@ -263,16 +254,18 @@ def minmax_player(game, state):
     
     start = time.perf_counter()
     end = start + game.timer
-    """use the above timer to implement iterative deepening using minmax_cutoff() version"""
-    while time.perf_counter() < end:
-        move = minmax_cutoff(game, state)
-        if move is not None:
-            best_move = move
-        game.d += 1
-        if time.perf_counter() >= end:
-            break
-    print("Your code goes here -10pt")
-    game.d=game.d-1
+    """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
+    move = None
+    #might not work? idk
+    #print("Your code goes here -10pt")
+    print('game.d')
+    #while time.perf_counter()<end:
+    move=minmax_cutoff(game,state)
+    if move is not None:
+        best_move = move
+        
+    #if time.perf_counter()>=end:
+        #break
     print("iterative deepening to depth: ", game.d)
     return best_move
 
