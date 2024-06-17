@@ -67,7 +67,7 @@ def minmax_cutoff(game, state):
             return 20000
         if d<=0:
             s=game.eval1(state)
-            print('score', s)
+            
             return s
         
         v = -np.inf
@@ -82,11 +82,11 @@ def minmax_cutoff(game, state):
             return -20000
         if d<=0:
             s=game.eval1(state)
-            print('score',s)
+           
             return s
         v = np.inf        
         for a in game.actions(state):
-            v = min(v, -max_value(game.result(state, a), d-1))
+            v = min(v, max_value(game.result(state, a), d-1))
         return v
 
     # Body of minmax_cutoff:
@@ -108,25 +108,29 @@ def alpha_beta(game, state):
         if game.terminal_test(state):
             return game.utility(state, player)
         print("Your code goes here -3pt")
+        bestVal=-np.inf
         v=-np.inf
         for a in game.actions(state):
             v=max(v, min_value(game.result(state, a), alpha, beta))
-            if v>=beta:
-                return v
-            alpha=max(alpha, v)
-        return v
+            bestVal=max(bestVal, v)
+            alpha = max(alpha, bestVal)
+            if beta <=alpha:
+                break
+        return bestVal
 
     def min_value(state, alpha, beta):
         if game.terminal_test(state):
             return game.utility(state, player)
         print("Your code goes here -2pat")
         v=np.inf
+        bestVal=np.inf
         for a in game.actions(state):
             v=min(v, max_value(game.result(state, a), alpha, beta))
-            if v<= alpha:
-                return v
-            beta=min(beta, v)
-        return v
+            bestVal=min(bestVal, v)
+            beta=min(beta, bestVal)
+            if beta<= alpha:
+                break
+        return bestVal
 
     # Body of alpha_beta_search:
     alpha = -np.inf
@@ -144,44 +148,47 @@ def alpha_beta_cutoff(game, state):
     player = game.to_move(state)
 
     # Functions used by alpha_beta
-    #TODO:check if winning move first then check depth holy fuck im dumb
-    #should be fine after that?
     def max_value(state, alpha, beta, depth):
+        if game.terminal_test(state):
+            return game.utility(state, player)
+        print("Your code goes here -3pt")
         if depth<=0:
-            print('depth found', depth)
             return game.eval1(state)
-        #print("Your code goes here -3pt")
-        
+        bestVal=-np.inf
         v=-np.inf
         for a in game.actions(state):
             v=max(v, min_value(game.result(state, a), alpha, beta, depth-1))
-            if v>=alpha:
-                return v
-            alpha=max(alpha, v)
-        return v
+            bestVal=max(bestVal, v)
+            alpha = max(alpha, bestVal)
+            if beta <=alpha:
+                break
+        return bestVal
 
     def min_value(state, alpha, beta, depth):
+        if game.terminal_test(state):
+            return game.utility(state, player)
+        print("Your code goes here -2pt")
         if depth<=0:
-            print('depth found', depth)
             return game.eval1(state)
-        #print("Your code goes here -3pt")
-        depth-=1
         v=np.inf
+        bestVal=np.inf
         for a in game.actions(state):
-            v=min(v, -max_value(game.result(state, a), alpha, beta, depth-1))
-            if v<=beta:
-                return v
-            beta=min(beta, v)
-        return v
+            v=min(v, max_value(game.result(state, a), alpha, beta, depth-1))
+            bestVal=min(bestVal, v)
+            beta=min(beta, bestVal)
+            if beta<= alpha:
+                break
+        return bestVal
+        
 
     # Body of alpha_beta_cutoff_search starts here:
     # The default test cuts off at depth d or at a terminal state
     alpha = -np.inf
     beta = np.inf
     best_action = None
-    #print("Your code goes here -10pt")
-    print('depth', game.d)
-    return max(game.actions(state), key=lambda a: min_value(game.result(state, a), alpha, beta, game.d), default=None)
+    print("Your code goes here -10pt")
+    best_action = max(game.actions(state), key=lambda a: min_value(game.result(state, a), alpha, beta, game.d), default=None)
+    return best_action
 
 # ______________________________________________________________________________
 # Players for Games
@@ -404,14 +411,19 @@ class TicTacToe(Game):
         """ computes number of (k-1) completed matches. This means number of row or columns or diagonals 
         which include player position and in which k-1 spots are occuppied by player.
         """
-        player= state.to_move
-        
+        #player= 'X'if state.to_move =='O' else 'O'
+        player=state.to_move
+        print(player)
         def possiblekComplete(move, board, player, k):
             """if move can complete a line of count items, return 1 for 'X' player and -1 for 'O' player"""
             match = self.k_in_row(board, move, player, (0, 1), k)
+            print(self.k_in_row(board, move, player, (0, 1), k))
             match = match + self.k_in_row(board, move, player, (1, 0), k)
+            print(self.k_in_row(board, move, player, (1, 0), k))
             match = match + self.k_in_row(board, move, player, (1, -1), k)
+            print(self.k_in_row(board, move, player, (1, -1), k))
             match = match + self.k_in_row(board, move, player, (1, 1), k)
+            print(self.k_in_row(board, move, player, (1, 1), k))
             return match
 
         
@@ -438,8 +450,8 @@ class TicTacToe(Game):
                 score+=10
             #center moves are good
             x, y = move
-            if(x==self.k/2+1 and y == self.k/2+1 ):
-                score+=1
+            #if(x==self.k/2+1 and y == self.k/2+1 ):
+                #score+=1
         def display(state):
             board = state.board
             for x in range(0, self.k):
@@ -447,6 +459,7 @@ class TicTacToe(Game):
                     print(board.get((self.k - x, y), '.'), end=' ')
                 print()
         display(state)
+        print('score', score)
         return score
 
 
