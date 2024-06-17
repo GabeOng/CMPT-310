@@ -63,22 +63,18 @@ def minmax_cutoff(game, state):
         
         print("Your code goes here a -3pt")
         if game.terminal_test(state) or d<=0:
-            return game.utility(state, player)
+            return game.eval1(state)
         v = -np.inf
         print(d)
         
         for a in game.actions(state):
-            
             v = max(v, min_value(game.result(state, a), d-1))
-               
-       
         return v
-        
 
     def min_value(state, d):
         
         if game.terminal_test(state) or d<=0:
-            return game.utility(state, player)
+            return game.eval1(state)
         v = np.inf
         print(d)
         
@@ -108,17 +104,17 @@ def alpha_beta(game, state):
             v=max(v, min_value(game.result(state, a), alpha, beta))
             if v>=beta:
                 return v
-            a=max(a, v)
+            alpha=max(alpha, v)
         return v
 
     def min_value(state, alpha, beta):
         if game.terminal_test(state):
             return game.utility(state, player)
-        print("Your code goes here -2pt")
+        print("Your code goes here -2pat")
         v=np.inf
         for a in game.actions(state):
             v=min(v, max_value(game.result(state, a), alpha, beta))
-            if v<= a:
+            if v<= alpha:
                 return v
             beta=min(beta, v)
         return v
@@ -128,9 +124,9 @@ def alpha_beta(game, state):
     beta = np.inf
     best_action = None
     print("Your code goes here -10pt")
-    v=max_value(state, alpha, beta)
     # TODO: return value????
-    return best_action
+    print('return')
+    return max(game.actions(state), key=lambda a: min_value(game.result(state, a), alpha, beta), default=None)
 
 
 def alpha_beta_cutoff(game, state):
@@ -140,18 +136,31 @@ def alpha_beta_cutoff(game, state):
 
     # Functions used by alpha_beta
     def max_value(state, alpha, beta, depth):
-        if game.terminal_test(state):
+        if game.terminal_test(state) or depth<=0:
+            print('depth found')
             return game.utility(state, player)
-        print("Your code goes here -3pt")
-
-        return 0
+        #print("Your code goes here -3pt")
+        
+        v=-np.inf
+        for a in game.actions(state):
+            v=max(v, min_value(game.result(state, a), alpha, beta, depth-1))
+            if v>=beta:
+                return v
+            beta=max(beta, v)
+        return v
 
     def min_value(state, alpha, beta, depth):
-        if game.terminal_test(state):
+        if game.terminal_test(state) or depth<=0:
             return game.utility(state, player)
-        print("Your code goes here -2pt")
-
-        return 0
+        #print("Your code goes here -3pt")
+        depth-=1
+        v=np.inf
+        for a in game.actions(state):
+            v=max(v, max_value(game.result(state, a), alpha, beta, depth-1))
+            if v>=alpha:
+                return v
+            alpha=max(alpha, v)
+        return v
 
     # Body of alpha_beta_cutoff_search starts here:
     # The default test cuts off at depth d or at a terminal state
@@ -159,9 +168,8 @@ def alpha_beta_cutoff(game, state):
     beta = np.inf
     best_action = None
     print("Your code goes here -10pt")
-
-    return best_action
-
+    print('depth', game.d)
+    return max(game.actions(state), key=lambda a: min_value(game.result(state, a), alpha, beta, game.d), default=None)
 
 # ______________________________________________________________________________
 # Players for Games
@@ -190,43 +198,64 @@ def random_player(game, state):
 
 def alpha_beta_player(game, state):
     """uses alphaBeta prunning with minmax, or with cutoff version, for AI player"""
-    print("Your code goes here -2pt")
+    print("Your code goes here -2pta")
+    
     """Use a method to speed up at the start to avoid search down a long tree with not much outcome.
     Hint: for speedup use random_player for start of the game when you see search time is too long"""
-
+    if(len(game.actions(state))>game.size**2-game.size):
+        print('first move')
+        return random_player(game, state)
+    
     if( game.timer < 0):
         game.d = -1
-        return alpha_beta(game, state)
+        move =alpha_beta(game, state)
+        print(move)
+        return move
     
     start = time.perf_counter()
     end = start + game.timer
     """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
     move = None
+    #might not work? idk
     print("Your code goes here -10pt")
-    
+    print('game.d')
+    #while time.perf_counter()<end:
+    move=alpha_beta_cutoff(game,state)
+    if move is not None:
+        best_move = move
+        
+    #if time.perf_counter()>=end:
+        #break
     print("iterative deepening to depth: ", game.d)
-    return move
+    return best_move
 
 
 def minmax_player(game, state):
     """uses minmax or minmax with cutoff depth, for AI player"""
     print("Your code goes here -3pt")
     """Use a method to speed up at the start to avoid search down a long tree with not much outcome.
-    Hint:for speedup use random_player for start of the game when you see search time is too long"""
-
+    Hint:for speedup use random_player for start of the game when you see search time is too long (maybe done)?"""
+    if(len(game.actions(state))>game.size**2-game.size):
+        return random_player(game, state)
+    
     if( game.timer < 0):
         game.d = -1
         return minmax(game, state)
-
+    
     start = time.perf_counter()
     end = start + game.timer
     """use the above timer to implement iterative deepening using minmax_cutoff() version"""
-    move = minmax_cutoff(game, state)
+    while time.perf_counter() < end:
+        move = minmax_cutoff(game, state)
+        if move is not None:
+            best_move = move
+        game.d += 1
+        if time.perf_counter() >= end:
+            break
     print("Your code goes here -10pt")
-    game.d=game.timer
+    game.d=game.d-1
     print("iterative deepening to depth: ", game.d)
-    return move
-
+    return best_move
 
 # ______________________________________________________________________________
 # base class for Games
@@ -354,30 +383,77 @@ class TicTacToe(Game):
         
     # evaluation function, version 1
     def eval1(self, state):
-        """design and implement evaluation function for state.
-        Some ideas: 1-use the number of k-1 matches for X and O For this you can use function possibleKComplete().
-            : 2- expand it for all k matches
-            : 3- include double matches where one move can generate 2 matches.
-            """
+        """Evaluate the board state for the current player."""
         
-        """ computes number of (k-1) completed matches. This means number of row or columns or diagonals 
-        which include player position and in which k-1 spots are occuppied by player.
-        """
-        def possiblekComplete(move, board, player, k):
-            """if move can complete a line of count items, return 1 for 'X' player and -1 for 'O' player"""
-            match = self.k_in_row(board, move, player, (0, 1), k)
-            match = match + self.k_in_row(board, move, player, (1, 0), k)
-            match = match + self.k_in_row(board, move, player, (1, -1), k)
-            match = match + self.k_in_row(board, move, player, (1, 1), k)
+        def possiblekComplete(board, player, k):
+            """Computes the number of k-1 matches for a given player on the board."""
+            match = 0
+            for move in state.moves:
+                match += self.k_in_row(board, move, player, (0, 1), k-1)
+                match += self.k_in_row(board, move, player, (1, 0), k-1)
+                match += self.k_in_row(board, move, player, (1, -1), k-1)
+                match += self.k_in_row(board, move, player, (1, 1), k-1)
             return match
 
-        # Maybe to accelerate, return 0 if number of pieces on board is less than half of board size:
+        def doubleMatchPotential(board, player, k):
+            """Identify positions where a single move can complete two lines."""
+            double_match = 0
+            for move in state.moves:
+                # Check if move can complete multiple lines
+                directions = [(0, 1), (1, 0), (1, -1), (1, 1)]
+                for dir1 in directions:
+                    for dir2 in directions:
+                        if dir1 != dir2:
+                            if self.k_in_row(board, move, player, dir1, k-1) and self.k_in_row(board, move, player, dir2, k-1):
+                                double_match += 1
+            return double_match
+
+        def completeMatches(board, player, k):
+            """Counts the number of k matches (completed lines) for the player."""
+            complete = 0
+            for move in state.moves:
+                complete += self.k_in_row(board, move, player, (0, 1), k)
+                complete += self.k_in_row(board, move, player, (1, 0), k)
+                complete += self.k_in_row(board, move, player, (1, -1), k)
+                complete += self.k_in_row(board, move, player, (1, 1), k)
+            return complete
+
+        def blockOpponentWin(board, opponent, k):
+            """Identify and score imminent winning threats from the opponent."""
+            block_score = 0
+            for move in state.moves:
+                if self.k_in_row(board, move, opponent, (0, 1), k-1) or \
+                self.k_in_row(board, move, opponent, (1, 0), k-1) or \
+                self.k_in_row(board, move, opponent, (1, -1), k-1) or \
+                self.k_in_row(board, move, opponent, (1, 1), k-1):
+                    block_score -= 1000000  # High penalty to prioritize blocking
+            return block_score
+
         if len(state.moves) <= self.k / 2:
             return 0
 
-        print("Your code goes here 15pt.")
+        player = state.to_move
+        opponent = 'X' if player == 'O' else 'O'
+        
+        # Calculate evaluation scores
+        player_k_minus_1 = possiblekComplete(state.board, player, self.k)
+        opponent_k_minus_1 = possiblekComplete(state.board, opponent, self.k)
+        
+        player_double_matches = doubleMatchPotential(state.board, player, self.k)
+        opponent_double_matches = doubleMatchPotential(state.board, opponent, self.k)
+        
+        player_complete_matches = completeMatches(state.board, player, self.k)
+        opponent_complete_matches = completeMatches(state.board, opponent, self.k)
+        
+        block_opponent_score = blockOpponentWin(state.board, opponent, self.k)
 
-        return 0
+        # Calculate the overall evaluation score
+        score = (player_complete_matches * 1000 - opponent_complete_matches * 1000 +
+                player_k_minus_1 * 10 - opponent_k_minus_1 * 10 +
+                player_double_matches * 5 - opponent_double_matches * 5 +
+                block_opponent_score)
+        
+        return score
 
 
 
