@@ -39,6 +39,7 @@ class MCTS: #Monte Carlo Tree Search implementation
 
     def isTerminalState(self, utility, moves):
         return utility != 0 or len(moves) == 0
+    
     def monteCarloPlayer(self, timelimit = 4):
         """Entry point for Monte Carlo search"""
         start = time.perf_counter()
@@ -50,16 +51,21 @@ class MCTS: #Monte Carlo Tree Search implementation
             #count -= 1
             # SELECT stage use selectNode()
             print("Your code goes here -3pt")
-            node = self.selectNode()
+            print('node', self.root)
+            node=self.selectNode(self.root)
             # EXPAND stage
             print("Your code goes here -2pt")
-            self.expandNode(node)
+            if not self.isTerminalState(node.state.utility, node.state.moves):
+                self.expandNode(node)
             # SIMULATE stage using simuplateRandomPlay()
             print("Your code goes here -3pt")
-
+            e=node
+            if node.children:
+                e=random.choice(node.children)
+            result=self.simulateRandomPlay(e)
             # BACKUP stage using backPropagation
             print("Your code goes here -2pt")
-
+            self.backPropagation(e, result)
         winnerNode = self.root.getChildWithMaxScore()
         assert(winnerNode is not None)
         return winnerNode.state.move
@@ -67,7 +73,11 @@ class MCTS: #Monte Carlo Tree Search implementation
     """selection stage function. walks down the tree using findBestNodeWithUCT()"""
     def selectNode(self, nd):
         node = nd
+        
         print("Your code goes here -3pt")
+        print('what the fuck is happeninggggggg', node)
+        while node.children:
+            node=self.findBestNodeWithUCT(node)
         return node
 
     def findBestNodeWithUCT(self, nd):
@@ -75,7 +85,9 @@ class MCTS: #Monte Carlo Tree Search implementation
         children....."""
         childUCT = []
         print("Your code goes here -2pt")
-        return None
+        childUCT = [self.uctValue(nd.visitCount, child.winScore, child.visitCount) for child in nd.children]
+        
+        return nd.children[childUCT.index(max(childUCT))]
 
 
     def uctValue(self, parentVisit, nodeScore, nodeVisit):
@@ -107,7 +119,11 @@ class MCTS: #Monte Carlo Tree Search implementation
         tempState = copy.deepcopy(nd.state) # to be used in the following random playout
         to_move = tempState.to_move
         print("Your code goes heren -5pt")
-
+        while not self.isTerminalState(tempState.utility, to_move) and self.game.actions(tempState):
+            action=random.choice(self.game.actions(tempState))
+            tempState = self.game.result(tempState, action)
+        
+        winStatus=tempState.utility
         return ('X' if winStatus > 0 else 'O' if winStatus < 0 else 'N') # 'N' means tie
 
 
@@ -116,5 +132,9 @@ class MCTS: #Monte Carlo Tree Search implementation
         the current leaf node to the root node."""
         tempNode = nd
         print("Your code goes here -5pt")
-
+        while tempNode is not None:
+            tempNode.visitCount+=1
+            if tempNode.state.to_move ==winningPlayer:
+                tempNode.winScore+=1
+            tempNode=tempNode.parent
 

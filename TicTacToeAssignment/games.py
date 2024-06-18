@@ -226,6 +226,7 @@ def alpha_beta_player(game, state):
     end = start + game.timer
     """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
     move = None
+    game.d=game.timer
     #might not work? idk
     #print("Your code goes here -10pt")
     print('game.d')
@@ -256,6 +257,7 @@ def minmax_player(game, state):
     end = start + game.timer
     """use the above timer to implement iterative deepening using alpha_beta_cutoff() version"""
     move = None
+    game.d=game.timer
     #might not work? idk
     #print("Your code goes here -10pt")
     print('game.d')
