@@ -1,0 +1,5 @@
+Each 'layer' might take longer than 1 second depending on the depth. At deeper depths for 5x5 especially there will be many different states that can be explored which will increase the search time drastically.
+Secondly there may be states where AlphaBeta pruning is not possible. Pruining can drastically improve performance and when not possible substantial time is added.
+
+To remedy this one could run the search algorithm asynchronously. The search algorithms would run while a timer keeps track of time. Before times up the timer will set a mutex so that the search algorithm will know when to trace back. At this point whatever depth the search is at will use an eval function to return a states value. The most important part to keep it undertime would be to determine when the timer should write to the mutex.
+A boring remedy would be when the timer is up and search is not complete you can make a random move.
