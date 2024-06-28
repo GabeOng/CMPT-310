@@ -334,7 +334,7 @@ class TicTacToe(Game):
             self.k = size
         else:
             self.k = k
-        self.d = 2 # d is cutoff depth. Default is -1 meaning no depth limit. It is controlled usually by timer
+        self.d = -1 # d is cutoff depth. Default is -1 meaning no depth limit. It is controlled usually by timer
         self.maxDepth = size * size # max depth possible is width X height of the board
         self.timer = t #timer  in seconds for opponent's search time limit. -1 means unlimited
         moves = [(x, y) for x in range(1, size + 1)
