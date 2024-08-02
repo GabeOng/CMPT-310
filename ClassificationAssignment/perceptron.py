@@ -80,8 +80,8 @@ class PerceptronClassifier:
             vector = util.Counter()
             for l in self.legalLabels:
                 vector[l] = self.weights[l]*d
-            guesses.append(vector.argMax)
-
+            guesses.append(vector.argMax())
+        #print('what is happeninggggggg', guesses)
         return guesses
 
 
@@ -89,9 +89,10 @@ class PerceptronClassifier:
         """
         Returns a list of the 100 features with the greatest weight for some label
         """
-        
+        featureWeights=[]
 
         "*** YOUR CODE HERE ***"
         
+        featureWeights=self.weights[label].sortedKeys()[:100]
 
-        return self.weights[label].sortedKeys()[:100]
+        return featureWeights

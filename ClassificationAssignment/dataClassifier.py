@@ -50,8 +50,8 @@ def enhancedFeatureExtractorDigit(datum):
     ##
     """
     features = basicFeatureExtractorDigit(datum)
-    features += basicFeatureExtractorDigit(datum.getPixels(), sig = 'gray', value = 1)
-    features += basicFeatureExtractorDigit(datum.getPixels(), sig = 'black', value = 2)    
+    #features += basicFeatureExtractorDigit(datum.getPixels(), sig = 'gray', value = 1)
+    #features += basicFeatureExtractorDigit(datum.getPixels(), sig = 'black', value = 2)    
     "*** YOUR CODE HERE to extract and add enhanced features to features list ***"
     
 

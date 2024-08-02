@@ -84,8 +84,9 @@ class MiraClassifier:
         cVal=sum([1 for y1, y2 in zip(self.classify(validationData), validationLabels) if y1 == y2])
         if cVal > bestAccuracyCount:
             bestParams, bestAccuracyCount = self.weights.copy(), cVal
-        return bestParams
         print("finished training. Best cGrid param = ", bestParams)
+        return bestParams
+        
 
     def classify(self, data):
         """
